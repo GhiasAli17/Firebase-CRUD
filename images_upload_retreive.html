@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Images upload</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-database.js"></script> 
+<script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-storage.js"></script> 
+</head>
+<style>
+    img{
+        border: 2px solid black;
+        width: 200px;
+        height: 200px;
+    }
+    #second{
+        border: 2px solid red;
+    }
+</style>
+<body>
+    Image Name <input type="text" id="namebox" /><label id="extlab"></label><br /><br />
+    <img id="myimg"> <label id="upProgress"></label><br /><br />
+
+    <button id="select">select</button>
+    <button id="upload">upload</button>
+    <button id="retreive">retreive</button>
+    <br /><br />
+    <img id="second" >
+ 
+    <script type="module">
+        var imgName,imgUrl;
+        var files=[];
+
+        var reader=new FileReader();
+
+
+        
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.8.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.8.1/firebase-analytics.js";
+  
+//   import {getDatabase,ref,get,update,remove,set,child} 
+//         from "https://www.gstatic.com/firebasejs/9.8.1/firebase-database.js";
+        
+   import {getDatabase, ref,set,child,get,update,remove } from
+   "https://www.gstatic.com/firebasejs/9.8.1/firebase-database.js"     
+        
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyCpnvxPFjHzXJQLn17b0sxsy2C4xHjT1gM",
+    authDomain: "imageuploading-7f76e.firebaseapp.com",
+    projectId: "imageuploading-7f76e",
+    storageBucket: "imageuploading-7f76e.appspot.com",
+    messagingSenderId: "325259346410",
+    appId: "1:325259346410:web:ae1de140c46abaafdc7293",
+    measurementId: "G-G3M1P999F5"
+  };
+  
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const realdb=getDatabase()
+
+  import {getStorage,ref as sRef,uploadBytesResumable,getDownloadURL} from "https://www.gstatic.com/firebasejs/9.8.1/firebase-storage.js"
+// selection process of image from local system
+
+const btnSelect=document.getElementById("select")
+const btnUpload=document.getElementById("upload")
+const btnRetreive=document.getElementById("retreive")
+const namebox=document.getElementById("namebox")
+const extlab=document.getElementById("extlab")
+const myimg=document.getElementById("myimg")
+const proglab=document.getElementById("upProgress")
+
+
+    
+    var input=document.createElement("input")
+    input.type="file"
+
+    input.onchange=e=>{
+        files=e.target.files;
+         var extension=GetFileExt(files[0]);
+
+        
+        var name=GetFileName(files[0]);
+        namebox.value=name;
+        extlab.innerHTML=extension;
+
+        reader.readAsDataURL(files[0])
+
+        reader.onload=function(){
+            myimg.src=reader.result;
+        }
+
+    }
+        
+
+    // selection proces
+    btnSelect.onclick=function(){
+        input.click();
+    }
+
+    function GetFileExt(file){
+        var temp=file.name.split(".");
+        var ext=temp.splice((temp.length-1),temp.length)
+        return '.'+ext[0]
+    }
+
+    function GetFileName(file) {
+        console.log(file)
+        var temp=file.name.split('.')
+        var fname=temp.slice(0,-1).join('.');
+        return fname;
+        
+    }
+
+    // upload process
+
+    async function UploadProcess(){
+        var ImgToUpload=files[0]
+        var ImgName=namebox.value+extlab.innerHTML;
+
+        const metaData={
+            contentType: ImgToUpload.type
+        }
+
+        const storage=getStorage()
+        const storageRef=sRef(storage,"Images/"+ImgName)
+
+        const UploadTask= uploadBytesResumable(storageRef,ImgToUpload,metaData)
+
+        UploadTask.on("state-changed",snapshot=>{
+            var progress=(snapshot.bytesTransferred/snapshot.totalBytes)*100;
+           // proglab.innerHTML="upload"+progress+"%"
+        },
+        error=>{
+            alert("error image not upload")
+        },
+        ()=>{
+            getDownloadURL(UploadTask.snapshot.ref).then(downloadURL=>{
+                SaveURLtoRealtimeDB(downloadURL)
+            })
+        })
+    }
+    //-----------------function for realtime database
+    function SaveURLtoRealtimeDB(URL){
+        var name=namebox.value;
+        var ext=extlab.innerHTML;
+        set(ref(realdb,"ImagesLinks/"+name),{
+            ImageName:(name+ext),
+            ImgUrl:URL
+        });
+    }
+
+    function GetUrlfromRealtimeDB(URL){
+        var name=namebox.value
+        var dbRef=ref(realdb)
+        alert("called")
+
+        get(child(dbRef,"ImagesLinks/"+name)).then(snapshot=>{
+            if(snapshot.exists()){
+                document.getElementById("second").src=snapshot.val().ImgUrl;
+            }
+        })
+    }
+
+    btnUpload.onclick=UploadProcess;
+    btnRetreive.onclick=GetUrlfromRealtimeDB;
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <label>Name: </label><input type="text" id="name" /><br />
+    <label>Email: </label><input type="text" id="email" /><br />
+    <button id="insert">INSERT</button><br />
+    <button id="select">SELECT</button><br />
+    <button id="update">UPDATE</button><br />
+    <button id="remove">REMOVE</button><br />
+
+
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.8.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.8.1/firebase-analytics.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+      
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+          apiKey: "AIzaSyA4QKWT1rBbrISmc5S2h6pE1n10iLj46SA",
+          authDomain: "webapp-d3579.firebaseapp.com",
+          projectId: "webapp-d3579",
+          storageBucket: "webapp-d3579.appspot.com",
+          messagingSenderId: "991884974481",
+          appId: "1:991884974481:web:9bb6e4a2be34abaa1e2230",
+          measurementId: "G-PQPTE1C0NG"
+        };
+      
+        import {getDatabase,ref,get,update,remove,set,child} 
+        from "https://www.gstatic.com/firebasejs/9.8.1/firebase-database.js";
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+
+        
+       // const analytics = getAnalytics(app);
+       const db=getDatabase()
+       
+       var count=0;
+       const btnInsert=document.getElementById("insert")
+       const btnSelect=document.getElementById("select")
+
+       const btnRemove=document.getElementById("remove")
+       const btnUpdate=document.getElementById("update")
+
+
+       btnInsert.addEventListener("click",insertData);
+       btnSelect.addEventListener("click",getData);
+       btnUpdate.addEventListener("click",updateData);
+       btnRemove.addEventListener("click",removeData);
+       // inserting data to firebase
+       function insertData(){
+           count++;
+           set(ref(db,"student/"+count),{
+               name:"GhiasAli",
+               email:"ghias@gmail.com"
+           }).then(()=>{
+               alert("data saved successfully")
+           }).catch(error=>{
+               alert(error)
+           })
+       }
+
+       // getting data from firebase
+       function getData(){
+           const dbref=ref(db)
+           get(child(dbref,"student/"+1)).then(snapshot=>{
+               if(snapshot.exists()){
+                   alert(snapshot.val().name)
+               }else{
+                   alert("no data found")
+               }
+           }).catch(error=>{
+               alert("error in getting data: "+error)
+           })
+       }
+
+       //updating data
+       function updateData(){
+           count++;
+           update(ref(db,"student/"+1),{
+               name:"GhiasAliChangedNow changed",
+               email:"ghias@gmail.com"
+           }).then(()=>{
+               alert("data updated successfully")
+           }).catch(error=>{
+               alert(error)
+           })
+       }
+
+       // removing data
+       function removeData(){
+        remove(ref(db,"student/"+1)).then(()=>{
+               alert("data removed successfully")
+           }).catch(error=>{
+               alert(error)
+           })
+       }
+       
+
+      </script>
+</body>
+</html>
